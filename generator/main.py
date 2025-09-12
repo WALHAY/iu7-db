@@ -160,7 +160,7 @@ class LibraryDataGenerator:
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['user_id', 'game_id', 'purchase_date'])
+            writer.writerow(['id', 'user_id', 'game_id', 'purchase_date'])
             
             # Создаем уникальные пары user_id + game_id (COMPOSITE PRIMARY KEY)
             pairs = set()
@@ -178,6 +178,7 @@ class LibraryDataGenerator:
                 )
                 
                 writer.writerow([
+                    i,
                     user_id,
                     game_id,
                     purchase_date
@@ -190,7 +191,7 @@ class LibraryDataGenerator:
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['publisher_id', 'game_id', 'genre_id', 'publish_date'])
+            writer.writerow(['id', 'publisher_id', 'game_id', 'genre_id', 'publish_date'])
             
             # Создаем уникальные тройки publisher_id + game_id + genre_id (COMPOSITE PRIMARY KEY)
             triples = set()
@@ -209,6 +210,7 @@ class LibraryDataGenerator:
                 )
                 
                 writer.writerow([
+                    i,
                     publisher_id,
                     game_id,
                     genre_id,
