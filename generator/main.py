@@ -8,22 +8,10 @@ class LibraryDataGenerator:
     def __init__(self):
         self.fake = Faker()
         self.used_logins = set()
-        self.used_genre_names = set()
         self.used_publisher_names = set()
         
-    def _generate_unique_login(self):
-        """Генерация уникального логина"""
-        login = f"user_{self.fake.user_name()}"
-        counter = 1
-        while login in self.used_logins:
-            login = f"user_{self.fake.user_name()}_{counter}"
-            counter += 1
-        self.used_logins.add(login)
-        return login
-    
-    def _generate_unique_genre_name(self):
-        """Генерация уникального названия жанра"""
-        base_genres = [
+        # Predefined genres as per your schema
+        self.base_genres = [
             "Action", "Adventure", "RPG", "Strategy", "Simulation",
             "Sports", "Racing", "Puzzle", "Horror", "FPS",
             "MMORPG", "Platformer", "Sandbox", "Survival", "Battle Royale",
@@ -32,21 +20,15 @@ class LibraryDataGenerator:
             "Fighting", "Flight Simulator", "Tycoon", "Party", "Trivia"
         ]
         
-        if len(self.used_genre_names) < len(base_genres):
-            # Используем базовые жанры сначала
-            for genre in base_genres:
-                if genre not in self.used_genre_names:
-                    self.used_genre_names.add(genre)
-                    return genre
-        
-        # Если базовые закончились, создаем составные
-        genre_name = f"{random.choice(base_genres)} {random.choice(['Pro', 'Ultimate', 'Extreme', 'Classic', 'Advanced'])}"
+    def _generate_unique_login(self):
+        """Генерация уникального логина"""
+        login = f"{self.fake.user_name()}"
         counter = 1
-        while genre_name in self.used_genre_names:
-            genre_name = f"{random.choice(base_genres)} {random.choice(['Pro', 'Ultimate', 'Extreme'])} {counter}"
+        while login in self.used_logins:
+            login = f"{self.fake.user_name()}_{counter}"
             counter += 1
-        self.used_genre_names.add(genre_name)
-        return genre_name
+        self.used_logins.add(login)
+        return login
     
     def _generate_unique_publisher_name(self):
         """Генерация уникального названия издателя"""
@@ -68,16 +50,15 @@ class LibraryDataGenerator:
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['id', 'login', 'password', 'name', 'registration_date'])
+            writer.writerow(['login', 'password', 'nickname', 'registration_date'])
             
-            for i in range(1, count + 1):
+            for i in range(count):
                 unique_login = self._generate_unique_login()
                 
                 writer.writerow([
-                    i,  # PRIMARY KEY - гарантированно уникальный
-                    unique_login,  # UNIQUE constraint
+                    unique_login,
                     self.fake.password(length=12),
-                    self.fake.name(),
+                    self.fake.user_name(),  # nickname
                     self.fake.date_between(start_date='-5y', end_date='today')
                 ])
         print(f"Generated {count} users in {filename}")
@@ -98,37 +79,35 @@ class LibraryDataGenerator:
             writer = csv.writer(file)
             writer.writerow(['id', 'name', 'description', 'price'])
             
-            for i in range(1, count + 1):
-                game_name = f"{random.choice(game_templates)} {i}"
+            for i in range(count):
+                game_name = f"{random.choice(game_templates)} {i+1}"
                 description = self.fake.text(max_nb_chars=200)
                 price = round(random.uniform(4.99, 99.99), 2)
                 
                 writer.writerow([
-                    i,  # PRIMARY KEY - гарантированно уникальный
+                    i,
                     game_name,
                     description,
                     price
                 ])
         print(f"Generated {count} games in {filename}")
 
-    def generate_genres(self, count=1000, filename='../postgres/genres.csv'):
+    def generate_genres(self, filename='../postgres/genres.csv'):
         """Генерация жанров"""
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['id', 'name', 'description'])
+            writer.writerow(['name', 'description'])
             
-            for i in range(1, count + 1):
-                unique_name = self._generate_unique_genre_name()
-                description = f"Games in the {unique_name} genre"
+            for genre_name in self.base_genres:
+                description = f"Games in the {genre_name} genre featuring {self.fake.word()} and {self.fake.word()}"
                 
                 writer.writerow([
-                    i,  # PRIMARY KEY - гарантированно уникальный
-                    unique_name,  # UNIQUE constraint
+                    genre_name,
                     description
                 ])
-        print(f"Generated {count} genres in {filename}")
+        print(f"Generated {len(self.base_genres)} genres in {filename}")
 
     def generate_publishers(self, count=1000, filename='../postgres/publishers.csv'):
         """Генерация издателей"""
@@ -136,17 +115,16 @@ class LibraryDataGenerator:
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(['id', 'name', 'site', 'description', 'rating', 'country'])
+            writer.writerow(['name', 'site', 'description', 'rating', 'country'])
             
-            for i in range(1, count + 1):
+            for i in range(count):
                 unique_name = self._generate_unique_publisher_name()
                 site = f"www.{unique_name.lower().replace(' ', '').replace('.', '')}.com"
                 rating = round(random.uniform(2.5, 5.0), 2)
                 country = self.fake.country()
                 
                 writer.writerow([
-                    i,  # PRIMARY KEY - гарантированно уникальный
-                    unique_name,  # UNIQUE constraint
+                    unique_name,
                     site,
                     self.fake.text(max_nb_chars=150),
                     rating,
@@ -158,18 +136,23 @@ class LibraryDataGenerator:
         """Генерация связей пользователей и игр"""
         os.makedirs(os.path.dirname(filename), exist_ok=True)
         
+        # Read user logins
+        user_logins = []
+        with open('../postgres/users.csv', 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            user_logins = [row['login'] for row in reader]
+        
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['id', 'user_id', 'game_id', 'purchase_date'])
             
-            # Создаем уникальные пары user_id + game_id (COMPOSITE PRIMARY KEY)
             pairs = set()
             for i in range(count):
                 while True:
-                    user_id = random.randint(1, users_count)
+                    user_login = random.choice(user_logins)
                     game_id = random.randint(1, games_count)
-                    if (user_id, game_id) not in pairs:
-                        pairs.add((user_id, game_id))
+                    if (user_login, game_id) not in pairs:
+                        pairs.add((user_login, game_id))
                         break
                 
                 purchase_date = self.fake.date_between(
@@ -179,29 +162,35 @@ class LibraryDataGenerator:
                 
                 writer.writerow([
                     i,
-                    user_id,
+                    user_login,
                     game_id,
                     purchase_date
                 ])
         print(f"Generated {count} user-game relations in {filename}")
 
-    def generate_publishers_games_genres(self, count=1000, publishers_count=1000, games_count=1000, genres_count=1000, filename='../postgres/publishers_games_genres.csv'):
+    def generate_publishers_games_genres(self, count=1000, publishers_count=1000, games_count=1000, filename='../postgres/publishers_games_genres.csv'):
         """Генерация связей издателей, игр и жанров"""
         os.makedirs(os.path.dirname(filename), exist_ok=True)
+        
+        # Read publisher names
+        publisher_names = []
+        with open('../postgres/publishers.csv', 'r', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            publisher_names = [row['name'] for row in reader]
         
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['id', 'publisher_id', 'game_id', 'genre_id', 'publish_date'])
             
-            # Создаем уникальные тройки publisher_id + game_id + genre_id (COMPOSITE PRIMARY KEY)
+            # Создаем уникальные тройки publisher_id + game_id + genre_id
             triples = set()
             for i in range(count):
                 while True:
-                    publisher_id = random.randint(1, publishers_count)
+                    publisher_name = random.choice(publisher_names)
                     game_id = random.randint(1, games_count)
-                    genre_id = random.randint(1, genres_count)
-                    if (publisher_id, game_id, genre_id) not in triples:
-                        triples.add((publisher_id, game_id, genre_id))
+                    genre_name = random.choice(self.base_genres)
+                    if (publisher_name, game_id, genre_name) not in triples:
+                        triples.add((publisher_name, game_id, genre_name))
                         break
                 
                 publish_date = self.fake.date_between(
@@ -211,9 +200,9 @@ class LibraryDataGenerator:
                 
                 writer.writerow([
                     i,
-                    publisher_id,
+                    publisher_name,
                     game_id,
-                    genre_id,
+                    genre_name,
                     publish_date
                 ])
         print(f"Generated {count} publisher-game-genre relations in {filename}")
@@ -222,19 +211,15 @@ class LibraryDataGenerator:
         """Генерация всех данных"""
         print("Starting data generation...")
         
+        # Generate main tables first
         self.generate_users(count_per_table)
         self.generate_games(count_per_table)
-        self.generate_genres(count_per_table)
+        self.generate_genres()  # Uses predefined genres
         self.generate_publishers(count_per_table)
         
-        # Для связующих таблиц используем тот же count_per_table
+        # Generate relationship tables (need to read from previously generated files)
         self.generate_users_games(count_per_table, count_per_table, count_per_table)
-        self.generate_publishers_games_genres(
-            count_per_table, 
-            count_per_table, 
-            count_per_table, 
-            count_per_table
-        )
+        self.generate_publishers_games_genres(count_per_table, count_per_table, count_per_table)
         
         print("Data generation completed!")
         print("Files saved in ../postgres/ directory")
