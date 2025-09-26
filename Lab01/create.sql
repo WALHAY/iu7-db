@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS library.games (
 
 CREATE TABLE IF NOT EXISTS library.genres ( 
 	name VARCHAR,
-	description TEXT
+	description TEXT,
+	singleplayer BOOLEAN,
+	age_restriction INT
 );
 
 CREATE TABLE IF NOT EXISTS library.publishers (

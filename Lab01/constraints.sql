@@ -42,6 +42,10 @@ ALTER TABLE library.publishers_games_genres
 ALTER TABLE library.games
 	ADD CONSTRAINT games_price_non_negative
 	CHECK (price >= 0::money);
+
+ALTER TABLE library.genres
+	ADD CONSTRAINT genre_age_range
+	CHECK (age_restriction <= 99 AND age_restriction >= 0);
 	
 ALTER TABLE library.publishers
 	ADD CONSTRAINT publishers_rating_range
@@ -73,5 +77,6 @@ ALTER TABLE library.publishers_games_genres
     ADD CONSTRAINT fk_publishers_games_genres_genre_id
 		FOREIGN KEY (genre_name)
 			REFERENCES library.genres(name)
-		ON UPDATE CASCADE
-		ON DELETE CASCADE;
+		ON DELETE SET NULL
+		ON UPDATE CASCADE;
+

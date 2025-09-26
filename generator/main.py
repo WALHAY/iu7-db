@@ -99,13 +99,15 @@ class LibraryDataGenerator:
         with open(filename, 'w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(['name', 'description'])
-            
+        
             for genre_name in self.base_genres:
                 description = f"Games in the {genre_name} genre featuring {self.fake.word()} and {self.fake.word()}"
                 
                 writer.writerow([
                     genre_name,
-                    description
+                    description,
+                    str(self.fake.pybool()),
+                    str([0, 3, 6, 9, 12, 14, 16, 18][random.randint(0, 7)])
                 ])
         print(f"Generated {len(self.base_genres)} genres in {filename}")
 
