@@ -1,4 +1,41 @@
+# Misc
 .DS_Store
-.git
-postgres/
-venv/
+*.txt
+misc/
+*.csv
+*.dot
+
+# Tex
+*.aux
+*.toc
+*.out
+*.log
+*.gz
+*.zip
+
+# PDFs
+*.backup
+*.bbl
+*.blg
+
+# Build
+build/
+out/
+*.o
+*.exe
+app
+!CMakeLists.txt
+.idea/
+
+# Utils misc
+*.xml
+*.json
+.cache/
+
+# Coverage
+*.gcov
+*.gcno
+*.gcda
+
+# Pipeline
+ready/

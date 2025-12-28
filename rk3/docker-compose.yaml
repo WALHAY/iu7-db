@@ -3,20 +3,19 @@ volumes:
 
 services: 
   postgres:
-    container_name: "lab07"
+    container_name: "rk3"
     image: postgres:14
     environment:
-      POSTGRES_DB: "lab01"
+      POSTGRES_DB: "rk3"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
       PGDATA: /data/postgres
     volumes:
-      - ./postgres:/var/lib/postgresql/data
+      - /Users/walhay/Study/DB/Rk3/data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
         - mynetwork
-
 networks:
   mynetwork:
     driver: bridge

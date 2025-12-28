@@ -1,0 +1,28 @@
+# eclipse
+bin
+*.launch
+.settings
+.metadata
+.project
+
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
+
+# lsp
+.factorypath
+.classpath
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+
+# mac
+.DS_Store
